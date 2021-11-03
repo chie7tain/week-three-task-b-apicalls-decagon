@@ -7,7 +7,7 @@ const currency = require("currency.js");
  * @returns {any} Trip data analysis
  */
 async function analysis() {
-  // Your code goes here
+// we created a new object to store the analysis data from the api
   let templateAnalysis = {
     noOfCashTrips: 0,
     noOfNonCashTrips: 0,
@@ -32,17 +32,20 @@ async function analysis() {
       totalAmountEarned: 0,
     },
   };
-
+// we then created a new array to store the trips data from the api
   let trips = await getTrips();
-
+// we then mapped through the trips data to get the drivers Ids
   let driverIds = trips.map((trip) => {
     return trip.driverID;
   });
 
   // get driver with the most vehicles
-  // this gets me unqiue driver ids
+  // we then used the new set function to remove the duplicate values
   driverIds = [...new Set(driverIds)];
 
+  // we then mapped through the drivers Ids to get the drivers data by calling the getDriver function
+  // with a parameter of the driver Id
+  // this will return an array of promises which would be collected by the driverInfo variable
   const driverInfo = driverIds.map(async (id) => {
     try {
       let driver = await getDriver(id);
@@ -52,7 +55,11 @@ async function analysis() {
     }
   });
 
+
+  // so we used the Promise.all function to wait for all the promises to resolve which is like mapping through the driverInfo array
+  // and returning the actual resolved or rejected promises data as an array of objects
   const resolvedDrivers = await Promise.all(driverInfo);
+
   // this filters out undefined drivers and drivers with less than 2 vehicles
   const driverWithMoreThanOneVehicle = resolvedDrivers
     .filter(Boolean)
@@ -166,8 +173,8 @@ async function analysis() {
   return templateAnalysis;
 }
 
-analysis().then((data) => {
-  console.log(data);
-});
+// analysis().then((data) => {
+//   console.log(data);
+// });
 
 module.exports = analysis;
