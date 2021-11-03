@@ -12,5 +12,8 @@
     "@types/jest": "24.0.15",
     "jest": "24.8.0",
     "mockdate": "2.0.3"
+  },
+  "dependencies": {
+    "currency.js": "^2.0.4"
   }
 }

@@ -20,7 +20,7 @@ The `getDriver` and `getVehicle` function may throw if given an ID that is unrec
 getTrips();
 ```
 
-Returns all trips that recorded.
+Returns all trips that are recorded.
 Note that some drivers may not have their information already recorded as a result of data loss.
 
 ### getDriver
