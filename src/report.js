@@ -10,43 +10,13 @@ const currency = require("currency.js");
  */
 async function driverReport() {
   // Your code goes here
-  let template = [
-    {
-      fullName: "",
-      id: "driver-id",
-      phone: "driver phone",
-      noOfTrips: 20,
-      noOfVehicles: 2,
-      vehicles: [
-        {
-          plate: "vehicle plate no",
-          manufacturer: "vehicle manufacturer",
-        },
-      ],
-      noOfCashTrips: 5,
-      noOfNonCashTrips: 6,
-      totalAmountEarned: 1000,
-      totalCashAmount: 100,
-      totalNonCashAmount: 500,
-      trips: [
-        {
-          user: "User name",
-          created: "Date Created",
-          pickup: "Pickup address",
-          destination: "Destination address",
-          billed: 1000,
-          isCash: true,
-        },
-        // ,... {}, {}
-      ],
-    },
-    // ,...{}, {}
-  ];
-  let templateAnalysis = [];
+
+  let templateHolder = [];
 
   // get all trips using getTrips function
   let trips = await getTrips();
-  console.log(trips);
+
+  // console.log(trips);
   // get all drivers using getDriver function by getting all the drivers ids from the trips
   let driverIDs = trips.map((trip) => trip.driverID);
   // use the new set function to remove duplicate ids
@@ -61,7 +31,7 @@ async function driverReport() {
   });
   allDriverInfo = await Promise.all(allDriverInfo);
 
-  console.log(allDriverInfo);
+  // console.log(allDriverInfo);
   // filter out falsy or undefined values from the driverInfo array
   allDriverInfo = allDriverInfo.filter(Boolean);
 
@@ -80,6 +50,7 @@ async function driverReport() {
     });
     vehicleInfo = await Promise.all(vehicleInfo);
     vehicleInfo = vehicleInfo.filter(Boolean);
+    console.log(vehicleInfo);
     return vehicleInfo;
   }
   let driversInfoWithId = [];
@@ -88,11 +59,8 @@ async function driverReport() {
       let driver = await getDriver(driverIDs[i]);
       driver = allDriverInfo.filter((oneDriver) => {
         if (oneDriver === driver) {
-          // console.log(driver);
-          // driver.id = driverIDs[i];
           driver["id"] = driverIDs[i];
           driversInfoWithId.push(driver);
-          // driversInfoWithId.push(driver, { id: driverIDs[i] });
         }
       });
     } catch (err) {
@@ -100,20 +68,35 @@ async function driverReport() {
     }
   }
 
-  console.log(driversInfoWithId);
   driversInfoWithId.forEach(async (driver) => {
-    console.log(driver);
-    let vehicleInfo = await getDriverVehicles(driver);
-    console.log(vehicleInfo);
-    driver.vehicles = vehicleInfo;
+    let templateAnalysis = {};
+    let driverVehicleInfo = await getDriverVehicles(driver);
+    console.log(driverVehicleInfo);
+    let vehicleDetails = driverVehicleInfo.map((data) => {
+      let { plate, manufacturer } = data;
+      return { plate, manufacturer };
+    });
     templateAnalysis.fullName = driver.name;
     templateAnalysis.id = driver.id;
     templateAnalysis.phone = driver.phone;
+
+    // let noOfTrips = 0;
+    // let noOfCashTrips = 0;
+
+    // trips.forEach((trip) => {
+    //   if (trip.driverID === driver.id) {
+    //     noOfTrips++;
+    //     if (trip.paymentMethod === "Cash") {
+    //       noOfCashTrips++;
+    //     }
+    //   }
+    // }
+
     templateAnalysis.noOfTrips = trips.filter(
       (trip) => trip.driverID === driver.id
     ).length;
     templateAnalysis.noOfVehicles = driver.vehicleID.length;
-    templateAnalysis.vehicles = vehicleInfo;
+    templateAnalysis.vehicle = vehicleDetails;
     templateAnalysis.noOfCashTrips = trips.filter(
       (trip) => trip.driverID === driver.id && trip.isCash === true
     ).length;
@@ -123,7 +106,8 @@ async function driverReport() {
     templateAnalysis.totalAmountEarned = trips
       .filter((trip) => trip.driverID === driver.id)
       .reduce((acc, trip) => {
-        return acc + currency(trip.billedAmount).value;
+        trip.billedAmount = currency(trip.billedAmount).value;
+        return currency(acc).value + currency(trip.billedAmount).value;
       }, 0);
     templateAnalysis.totalCashAmount = trips
       .filter((trip) => trip.driverID === driver.id && trip.isCash === true)
@@ -135,97 +119,12 @@ async function driverReport() {
       .reduce((acc, trip) => {
         return acc + currency(trip.billedAmount).value;
       }, 0);
-    templateAnalysis.trips = trips.filter(
-      (trip) => trip.driverID === driver.id
-    );
+    templateHolder.push(templateAnalysis);
   });
 
-  console.log(allDriverInfo.length);
-  // allDriverInfo.forEach((oneDriverInfo) => {
-  // let vehicleInfo = await getDriverVehicles(oneDriverInfo);
-  // console.log(vehicleInfo);
-  // let driverTemplate = {
-  //   name: oneDriverInfo.name,
-  //   id: oneDriverInfo.id,
-  //   phone: oneDriverInfo.phone,
-  //   // noOfTrips: oneDriverInfo.trips.length,
-  //   noOfVehicles: vehicleID.length,
-  //   vehicles: vehicleInfo,
-  //   noOfCashTrips: oneDriverInfo.trips.filter((trip) => trip.isCash).length,
-  //   noOfNonCashTrips: oneDriverInfo.trips.filter((trip) => !trip.isCash)
-  //     .length,
-  //   totalAmountEarned: oneDriverInfo.trips.reduce((acc, trip) => {
-  //     return acc + trip.billed;
-  //   }, 0),
-  //   totalCashAmount: oneDriverInfo.trips
-  //     .filter((trip) => trip.isCash)
-  //     .reduce((acc, trip) => {
-  //       return acc + trip.billed;
-  //     }, 0),
-  //   totalNonCashAmount: oneDriverInfo.trips
-  //     .filter((trip) => !trip.isCash)
-  //     .reduce((acc, trip) => {
-  //       return acc + trip.billed;
-  //     }, 0),
-  //   trips: oneDriverInfo.trips,
-  // };
-  // templateAnalysis.push(driverTemplate);
-  // });
-  console.log(templateAnalysis);
+  console.log(templateHolder);
 
-  // for (let i = 0; i < allDriverInfo.length; i++) {
-  // let driverVehicleInfo = getDriverVehicles(allDriverInfo[i]);
-
-  // template[i].name = allDriverInfo[i].name;
-  // templateAnalysis[i].id = allDriverInfo[i].id;
-  // templateAnalysis[i].phone = allDriverInfo[i].phone;
-  // templateAnalysis[i].noOfTrips = trips.filter(
-  //   (trip) => trip.driverID === allDriverInfo[i].id
-  // ).length;
-  // templateAnalysis[i].noOfVehicles = allDriverInfo[i].vehicleID.length;
-  // templateAnalysis[i].vehicles = await driverVehicleInfo;
-  // templateAnalysis[i].noOfCashTrips = trips.filter(
-  //   (trip) => trip.driverID === allDriverInfo[i].id && trip.isCash === true
-  // ).length;
-  // templateAnalysis[i].noOfNonCashTrips = trips.filter(
-  //   (trip) => trip.driverID === allDriverInfo[i].id && trip.isCash === false
-  // ).length;
-  // templateAnalysis[i].totalAmountEarned = trips
-  //   .filter((trip) => trip.driverID === allDriverInfo[i].id)
-  //   .reduce((acc, curr) => acc + curr.billed, 0);
-  // templateAnalysis[i].totalCashAmount = trips
-  //   .filter(
-  //     (trip) => trip.driverID === allDriverInfo[i].id && trip.isCash === true
-  //   )
-  //   .reduce((acc, curr) => acc + curr.billed, 0);
-  // templateAnalysis[i].totalNonCashAmount = trips
-  //   .filter(
-  //     (trip) => trip.driverID === allDriverInfo[i].id && trip.isCash === false
-  //   )
-  //   .reduce((acc, curr) => acc + curr.billed, 0);
-  // templateAnalysis[i].trips = trips.filter(
-  //   (trip) => trip.driverID === allDriverInfo[i].id
-  // );
-  // }
-
-  // let vehicleInfo = [];
-  // allDriverInfo.forEach(async (driver) => {
-  //   console.log(driver);
-  //   let vehicleIDs = driver.vehicleID;
-  //   // use the new set function to remove duplicate ids
-  //   vehicleIDs = Array.from(new Set(vehicleIDs));
-  //   // now to get all the vehicles we need to use the getVehicle function to get the vehicles by mapping the ids to the getVehicle function
-  //   vehicleInfo = vehicleIDs.map(async (vehicleId) => {
-  //     try {
-  //       return await getVehicle(vehicleId);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   });
-  //   vehicleInfo = await Promise.all(vehicleInfo);
-  //   console.log(vehicleInfo);
-  // });
-  console.log(templateAnalysis);
+  return templateHolder;
 }
 
 driverReport().then((data) => {

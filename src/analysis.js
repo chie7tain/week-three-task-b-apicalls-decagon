@@ -62,10 +62,8 @@ async function analysis() {
 
   // this filters out undefined drivers and drivers with less than 2 vehicles
   const driverWithMoreThanOneVehicle = resolvedDrivers
-    .filter(Boolean)
-    .filter((driver) => {
-      return driver.vehicleID.length > 1;
-    });
+    // .filter(Boolean)
+    .filter((driver) => driver && driver.vehicleID.length > 1);
 
   templateAnalysis.noOfDriversWithMoreThanOneVehicle =
     driverWithMoreThanOneVehicle.length;
@@ -82,7 +80,10 @@ async function analysis() {
   }, {});
 
   let topDriver = Math.max(...Object.values(driverWithMostTrips));
-  console.log(topDriver);
+
+  // const dri = driverWithMostTrips[topDriver]
+  // console.log(dri)
+
   let topDriverId = [];
   for (let id in driverWithMostTrips) {
     if (driverWithMostTrips[id] === topDriver) {
@@ -173,8 +174,5 @@ async function analysis() {
   return templateAnalysis;
 }
 
-// analysis().then((data) => {
-//   console.log(data);
-// });
 
 module.exports = analysis;
